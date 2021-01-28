@@ -51,21 +51,33 @@ ggplot(CDALk, aes(x=same_year(dateTime), y=Elev, color=Year)) +
 ### Get SJR Level Data
 SJR_siteNo <- "12415070" # SJR gauge at St Maries, ID
 
-sjr <- readNWISdata(siteNumbers = SJR_siteNo, 
+sjr35 <- readNWISdata(siteNumbers = SJR_siteNo, 
                     parameterCd = pCode, 
-                    startDate = start.date,
-                    endDate = end.date, 
+                    startDate = start.date35,
+                    endDate = end.date35, 
                     service = "dv") %>% 
   renameNWISColumns() %>% 
   tibble() %>% 
   mutate(Elev = GH + 2142,
          Year = as.factor(year(dateTime)))
 
+sjr20 <- readNWISdata(siteNumbers = SJR_siteNo, 
+                    parameterCd = pCode, 
+                    startDate = start.date20,
+                    endDate = end.date20, 
+                    service = "dv") %>% 
+  renameNWISColumns() %>% 
+  tibble() %>% 
+  mutate(Elev = GH + 2141.2,
+         Year = as.factor(year(dateTime)))
+
+sjr <- bind_rows(sjr35, sjr20)
+
 ### Plot Time Series of SJR Level
 ggplot(sjr, aes(x=same_year(dateTime), y=Elev, color=Year)) + 
   geom_line() + 
   scale_x_datetime(date_breaks = "1 month", date_labels = "%b") +
-  labs(x = NULL, y = "SJR Elevation ft AMSL NAVD88") + 
+  labs(x = NULL, y = "SJR Elevation ft AMSL Avista vert. datum") + 
   scale_y_continuous(breaks = scales::pretty_breaks(n=10))
 
 ### combine CDA Lk and SJR
@@ -92,8 +104,8 @@ cor.GH2 <- cor.test(GH2$Elev.CDALk, GH2$Elev.SJR)
 ggplot(GH2, aes(Elev.CDALk, Elev.SJR)) +
   geom_smooth(method = lm) +
   geom_point(aes(color = factor(year(dateTime))), alpha = 0.2) +
-  labs(x = "CDA Lake Elev NAVD88",
-       y = "SJR Elev NAVD88",
+  labs(x = "CDA Lake Elev Avista VD",
+       y = "SJR Elev Avista VD",
        color = "Year") +
   annotate("text", 
            label = paste("R =", round(cor.GH2$estimate, 2)), 
